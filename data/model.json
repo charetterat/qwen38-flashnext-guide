@@ -1,0 +1,392 @@
+{
+  "_comment": "Single source of truth. Every number here is copied from a primary source listed in verification_sources — none are estimated. regen README with: python3 scripts/gen_readme.py",
+  "model": {
+    "hf_id": "Qwen/Qwen3.8-Flash-Next",
+    "model_type": "qwen4_exp",
+    "architecture_class": "Qwen4ExpForConditionalGeneration",
+    "license": "qwen-community-1.0",
+    "license_name": "Qwen Community License 1.0",
+    "modality": "image-text-to-text",
+    "params": {
+      "_note": "The '125B' figure that circulates everywhere is the language model only. The released checkpoint is larger.",
+      "total_safetensors_params": 179999981459,
+      "total_safetensors_params_human": "180B",
+      "language_model_params": "125B",
+      "activated_params_per_token": "6B",
+      "ngram_embedding_params": "51B",
+      "mtp_params": "4B",
+      "activation": "10 routed + 1 shared expert per layer"
+    },
+    "weights": {
+      "_note": "BF16 release, as published in model.safetensors.index.json",
+      "bf16_total_bytes": 359999963128,
+      "bf16_total_human": "360 GB",
+      "shards": 131
+    },
+    "architecture": {
+      "num_hidden_layers": 48,
+      "hidden_size": 2560,
+      "layer_pattern": "12 x (3 x (Gated DeltaNet -> MoE) -> 1 x (Qwen Sparse Attention -> MoE))",
+      "num_experts": 512,
+      "num_experts_per_tok": 10,
+      "shared_expert": 1,
+      "moe_intermediate_size": 640,
+      "num_attention_heads": 24,
+      "num_key_value_heads": 2,
+      "head_dim": 256,
+      "full_attention_layers": 12,
+      "linear_attention_layers": 36,
+      "delta_net_value_heads": 48,
+      "delta_net_key_heads": 16,
+      "delta_net_head_dim": 128,
+      "qsa_rope_dim": 64,
+      "qsa_indexer": "MQA, 4 query heads, 1 shared key head, budget 512 blocks / 2048 tokens",
+      "gated_residual_branches": 4,
+      "gated_residual_bottleneck_rank": 320,
+      "vocab_size": 248320,
+      "ngram_vocab_size_base": 20000000,
+      "ngram_layer": 2,
+      "mtp_layers": 1,
+      "context_native": 262144,
+      "context_extensible_to": 1000000,
+      "native_dtype": "bfloat16",
+      "vision_encoder": "depth 27, hidden 1152, patch 16, spatial merge 2"
+    }
+  },
+  "quantizations": {
+    "_note": "All numbers are PUBLISHED FILE BYTES on Hugging Face, not measured process memory. shard1 = the active weights a runtime mmaps into RAM/VRAM. shard2 = the 28.8 GB n-gram lookup table; it is memory-mapped from SSD and only paged in on demand, so disk size and RAM pressure are separate constraints. See also: measured peak RAM/VRAM is NOT included here - the table below cannot be added to a VRAM figure to compute 'peak process memory', because mmap, GPU offload, KV cache and runtime state all change that. Sources: HF file listings (blobs=true) and Strata docs/MODELS.md.",
+    "primary_publisher": {
+      "name": "ISTA-DASLab",
+      "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+      "technique": "GSQ (group-wise saliency quantization) + RCO (rate-cutoff optimization)",
+      "downloads": 2244732
+    },
+    "sizes": [
+      {
+        "quant": "Q2_0",
+        "shard1_bytes": 37623740192,
+        "shard1_human": "37.6 GB",
+        "shard2_bytes": 28800138432,
+        "total_download_human": "66.4 GB",
+        "relative_quality": "STRATA's wording, not an independent benchmark",
+        "relative_speed": "highest in this table (one project, two machines; see Measured throughput)",
+        "strata_ram_vram_requirement": "shard 1 is 37.6 GB; this is the published file size, not measured peak process memory",
+        "disk_budget_human": "73 GB",
+        "disk_budget_note": "download + ~6 GB MTP draft layer (+1 GB more if you enable the vision encoder)"
+      },
+      {
+        "quant": "IQ2_XS",
+        "shard1_bytes": 39225954592,
+        "shard1_human": "39.2 GB",
+        "shard2_bytes": 28800138432,
+        "total_download_human": "68.0 GB",
+        "relative_quality": "STRATA's wording, not an independent benchmark",
+        "relative_speed": "recommended by Strata",
+        "strata_ram_vram_requirement": "shard 1 is 39.2 GB; this is the published file size, not measured peak process memory",
+        "recommended": true,
+        "disk_budget_human": "75 GB",
+        "disk_budget_note": "download + ~6 GB MTP draft layer (+1 GB more if you enable the vision encoder)"
+      },
+      {
+        "quant": "IQ3_XXS",
+        "shard1_bytes": 47039860096,
+        "shard1_human": "47.0 GB",
+        "shard2_bytes": 28800138432,
+        "total_download_human": "75.8 GB",
+        "relative_quality": "STRATA's wording, not an independent benchmark",
+        "relative_speed": null,
+        "strata_ram_vram_requirement": "shard 1 is 47.0 GB; this is the published file size, not measured peak process memory",
+        "disk_budget_human": "83 GB",
+        "disk_budget_note": "download + ~6 GB MTP draft layer (+1 GB more if you enable the vision encoder)"
+      },
+      {
+        "quant": "IQ3_S",
+        "shard1_bytes": 54817524224,
+        "shard1_human": "54.8 GB",
+        "shard2_bytes": 28800138432,
+        "total_download_human": "83.6 GB",
+        "relative_quality": "STRATA's wording, not an independent benchmark",
+        "relative_speed": null,
+        "strata_ram_vram_requirement": "shard 1 is 54.8 GB; this is the published file size, not measured peak process memory",
+        "disk_budget_human": "90 GB",
+        "disk_budget_note": "download + ~6 GB MTP draft layer (+1 GB more if you enable the vision encoder)"
+      }
+    ],
+    "mmproj": {
+      "file": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+      "bytes": 907543008,
+      "human": "0.91 GB",
+      "purpose": "vision encoder; only needed for image input"
+    },
+    "other_publishers": [
+      {
+        "publisher": "Unsloth",
+        "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+        "downloads": 1370795,
+        "variants": [
+          "UD-IQ1_S",
+          "UD-IQ1_M",
+          "UD-IQ4_XS",
+          "UD-Q2_K_XL",
+          "UD-Q3_K_XL",
+          "UD-Q4_K_XL",
+          "UD-Q5_K_XL",
+          "UD-Q6_K_XL",
+          "Q8_0",
+          "BF16"
+        ],
+        "shard1_human": "49.8-54.4 GB for the K-quants; 102.4 GB BF16",
+        "status_in_strata": "UD-IQ4_XS is in the installer menu; UD-Q4_K_XL and UD-Q6_K_XL are experimental and not in the menu",
+        "what": "Unsloth's ~4-bit line (1.37M downloads as of 2026-10-06, the second-highest HF download count among republishers of this model, after ISTA-DASLab at 2.24M)"
+      },
+      {
+        "publisher": "UkisAI",
+        "repo": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+        "what": "fine-tune that thinks for a much shorter time before answering. Strata's docs say you get the answer sooner at about the same quality - their assessment, not a benchmark we ran or found",
+        "status_in_strata": "installer menu via --family swift",
+        "repo_note": "the GitHub repo of this name does not exist; the model is on HuggingFace",
+        "same_size_note": "same RAM and per-token speed as the same size of the original (no IQ3_S build)"
+      }
+    ],
+    "coder_variant": {
+      "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+      "quant": "IQ1_M",
+      "shard1_human": "29.6 GB",
+      "experts_kept": "256 of each layer's 512, chosen on code (agentic + image) data",
+      "authors_claims": "91% of the full model's SWE-bench Verified, 99% of LiveCodeBench (publisher's own numbers; not independently reproduced here)",
+      "target_system": "Upstream documents this variant for certain 32 GB RAM configurations based on its 29.6 GB shard-1 file size; peak process memory is not measured by this project, so zero-paging cannot be guaranteed",
+      "caveat": "weaker outside code, and specifically wrong or looping on Chinese and other CJK text (Strata #438)",
+      "strata_flag": "--setup --family coder"
+    }
+  },
+  "why_a_12gb_card_runs_a_180b_model": {
+    "_claim_correction": "⚠️ Strata's README calls the 3-of-4-linear-attention layout a reason the model is tractable. That is not the memory mechanism. Linear/sparse attention lowers long-context compute and KV-cache cost; it does not reduce the weight bytes you have to store. The weight-capacity answer is: MoE sparsity (compute) + quantization (bytes per weight) + offload (which tier holds them).",
+    "why_a_12gb_card_stores_a_180b_model": [
+      {
+        "lever": "MoE sparsity (compute, not memory)",
+        "what": "48 layers x 512 experts = 24,576 experts, but only 10 routed + 1 shared are chosen per layer per token",
+        "effect": "about 6B parameters of compute per token instead of 180B. That is why the per-token work is small. It is NOT why the model fits, and small per-token work alone does not guarantee fast decoding once weights are being moved between storage tiers."
+      },
+      {
+        "lever": "quantization (bytes per weight)",
+        "what": "Q2_0 through IQ3_S store the experts at 2-3 bpw, so each per-quant shard 1 (the expert weights) lands at 37.6-54.8 GB instead of the BF16 expert-shard equivalent. The 360 GB BF16 figure is the entire released checkpoint including embedding and MTP, not the same component as shard 1, so it is not on the same comparison axis as the 37.6-54.8 GB numbers; we do not state a compression ratio from these.",
+        "effect": "this is what shrinks the resident set; it does not change the embedding / MTP components"
+      },
+      {
+        "lever": "tiered offload (where it lives)",
+        "what": "Per Strata's description: a small hot set of expert weights on the GPU, the rest in system RAM, and the 28.8 GB n-gram lookup table mmap-ed on the SSD. Which slice sits where depends on the build, the driver, the runtime flags and what else is open; the 12 GB figure is the GPU's share at one configuration, not the model's total resident set.",
+        "effect": "this is what lets a 12 GB card be enough at one configuration - the card only ever holds a slice"
+      },
+      {
+        "lever": "linear + sparse attention (context, not capacity)",
+        "what": "36 of 48 layers use Gated DeltaNet (linear attention with recurrent state) rather than softmax attention, altering context state memory scaling; the remaining 12 layers use Qwen Sparse Attention with a 2048-token index budget, reducing per-token attention compute and memory bandwidth.",
+        "effect": "Reduces per-token attention computation and recurrent state growth in DeltaNet layers during long-context processing. Note that sparse attention does not necessarily reduce persistent KV storage without an explicit cache eviction policy in the runtime. Crucially, neither mechanism reduces the model's weight byte count on disk or in RAM."
+      }
+    ],
+    "ram_loaded_from_strata": "Strata describes 35-55 GB into RAM at recommended settings (i.e. shard 1 plus a working set, not the full BF16 weights)",
+    "first_start": "1-3 minutes while the model loads, and longer the first time. If it is still unresponsive after 10 minutes, that is not normal: close other programs, restart, or pick a smaller size.",
+    "low_ram_mode": "When system RAM cannot hold the experts beside the OS, setup uses memory-mapping from the model files on SSD. However, mmap maps files into virtual address space and accessed pages still cause RAM residency and cache pressure. A 32 GB PC with a 24 GB GPU runs Q2_0, IQ2_XS and the Coder under this low-RAM configuration; a 32 GB PC with a 12-16 GB GPU runs the Coder. Because experts are paged from SSD on demand, this mode is significantly slower.",
+    "override_flag": "START-HERE.bat --setup --low-ram on|off"
+  },
+  "measured_throughput": {
+    "_warning": "These are Strata's published numbers on two specific machines, not independent verification, and they do not transfer to other cards. Neither table represents a controlled comparison: System A conflates quant size with engine version (0.1.36 vs 0.1.26), and System B's engine versions were not reported by upstream. Rows list full-expert quants in ascending shard-1 size, with the Coder variant (256 experts kept) appended as a specialized sub-variant rather than a speed ranking.",
+    "system_a": "NVIDIA RTX 5070 (12 GB), Ryzen 5 7600, 64 GB RAM, engine 0.1.36 (Q2_0) / 0.1.26 (others), 4K answers, 32K prompts",
+    "system_b": "AMD RX 9070 XT (16 GB), Ryzen 9 3900X, 47 GB RAM, Linux",
+    "metrics_note": "Writes answers = decode throughput. Reads your prompt = prefill throughput on a 32K-token prompt. A token is about 3/4 of a word in English; in Chinese/Japanese/Korean the ratio is closer to 1:1, so the same tok/s reads slower to a CJK reader.",
+    "system_a_rows": [
+      {
+        "quant": "Q2_0",
+        "engine": "0.1.36",
+        "decode_short": 94,
+        "decode_128k_ctx": 76,
+        "prefill_32k": 2650
+      },
+      {
+        "quant": "IQ2_XS",
+        "engine": "0.1.26",
+        "decode_short": 79,
+        "decode_128k_ctx": 63,
+        "prefill_32k": 2090
+      },
+      {
+        "quant": "IQ3_XXS",
+        "engine": "0.1.26",
+        "decode_short": 62,
+        "decode_128k_ctx": 49,
+        "prefill_32k": 1750
+      },
+      {
+        "quant": "IQ3_S",
+        "engine": "0.1.26",
+        "decode_short": 53,
+        "decode_128k_ctx": 46,
+        "prefill_32k": 1620
+      },
+      {
+        "quant": "Coder (IQ1_M)",
+        "engine": "0.1.26",
+        "decode_short": 55,
+        "decode_128k_ctx": 43,
+        "prefill_32k": 2180
+      }
+    ],
+    "system_b_rows": [
+      {
+        "quant": "Q2_0",
+        "engine": "unverified (not reported by upstream)",
+        "decode_short": 60,
+        "decode_128k_ctx": 48,
+        "prefill_32k": 1160
+      },
+      {
+        "quant": "IQ2_XS",
+        "engine": "unverified (not reported by upstream)",
+        "decode_short": 52,
+        "decode_128k_ctx": 36,
+        "prefill_32k": 1110
+      },
+      {
+        "quant": "Coder (IQ1_M)",
+        "engine": "unverified (not reported by upstream)",
+        "decode_short": 44,
+        "decode_128k_ctx": 33,
+        "prefill_32k": 1420
+      }
+    ],
+    "projections_not_measurements": {
+      "_note": "Strata's own estimates, explicitly labelled as such in the source. Do not quote as measured.",
+      "rows": [
+        {
+          "config": "RTX 3090 (24 GB), same original model",
+          "value": "roughly 100–140 tokens/s decode",
+          "why": "more VRAM means more of the model stays on the card",
+          "kind": "estimate"
+        },
+        {
+          "config": "Unsloth UD-Q4_K_XL on a 64 GB PC with a 12 GB GPU",
+          "value": "7–8.5 tokens/s",
+          "why": "77 GB of experts do not fit in RAM, so most are read from the SSD during inference",
+          "kind": "estimate"
+        }
+      ]
+    },
+    "community_reports": [
+      {
+        "date": "2026-09-30",
+        "hardware": "RTX 5090, Core Ultra 9 285K, 64 GB RAM",
+        "config": "Strata 0.1.29, original Flash-Next IQ2_XS, 131,072-token context",
+        "url": "https://github.com/Niko1221/Strata/blob/main/bench/results/2026-09-30-community-rtx-5090/README.md"
+      },
+      {
+        "date": "2026-10-03",
+        "hardware": "2x AMD Instinct MI50 16 GB (gfx906), Xeon E5-2666 v3, 32 GB RAM",
+        "config": "the gfx906 build (#638) with #639 and #640, Coder IQ1_M, 131,072-token context, layer split across both cards",
+        "url": "https://github.com/Niko1221/Strata/blob/main/bench/results/2026-10-03-community-2x-mi50/README.md"
+      },
+      {
+        "date": "2026-10-04",
+        "hardware": "2x Intel Arc Pro B60 24 GB, Ryzen 5 5600, 64 GB RAM",
+        "config": "the SYCL port at 6f32ec0 with two fixes, Coder IQ1_M and Flash-Next IQ2_XS, 8,192-token context",
+        "url": "https://github.com/Niko1221/Strata/blob/main/bench/results/2026-10-04-community-2x-arc-pro-b60/README.md"
+      }
+    ],
+    "_scope": "If someone else has published a measurement that is not listed here, it is absent from our survey, not proof that it does not exist. data/failures.json and data/runtimes.json record what we looked for."
+  },
+  "pick_by_ram": [
+    {
+      "ram": "32 GB",
+      "vram": "12-16 GB",
+      "take": "Coder",
+      "works": "upstream recommends this size",
+      "caveat": "the only published variant whose shard-1 file size (29.6 GB) is under 32 GB; real RAM/VRAM paging depends on runtime and OS headroom",
+      "why": "upstream targets 32 GB RAM based on 29.6 GB shard-1 file size; peak process memory is not measured, so zero-paging cannot be guaranteed",
+      "task_caveats": "Do NOT pick Coder if you work in Chinese or other CJK text — answers come back wrong or looping. Switching to full-expert quants on 32 GB RAM is a language-quality choice, not an assurance of viable performance."
+    },
+    {
+      "ram": "32 GB",
+      "vram": "24 GB",
+      "take": "Q2_0 or IQ2_XS",
+      "works": "upstream documents it as a low-RAM exception (slower)",
+      "caveat": "slower - the GPU holds more, the rest streams from the model files",
+      "why": "upstream documents a 24 GB GPU as a low-RAM offload exception (more weights reside in VRAM)",
+      "task_caveats": "Retains all experts (avoiding Coder's CJK degradation, though independent GPU issues like sm120 CUDA 13.2 still apply). If you need image input, also add the ~1 GB vision encoder file."
+    },
+    {
+      "ram": "48 GB",
+      "vram": ">= 12 GB",
+      "take": "IQ2_XS, or Q2_0 for speed",
+      "works": "upstream recommends this size",
+      "caveat": "shard-1 file size is 39.2 GB; larger quants (47.0 GB and 54.8 GB) approach or exceed 48 GB",
+      "why": "upstream recommends 48 GB for IQ2_XS; shard 1 file size is 39.2 GB",
+      "task_caveats": "Retains all experts. Image input supported on NVIDIA on both Windows and Linux; on AMD it is CPU-only on Linux and not yet available on Windows (Strata #304)."
+    },
+    {
+      "ram": "64 GB",
+      "vram": ">= 12 GB",
+      "take": "IQ2_XS",
+      "works": "upstream recommends this size",
+      "caveat": "shard-1 file sizes range from 37.6 to 54.8 GB",
+      "why": "upstream recommends 64 GB for the main quant set (shard-1 files range from 37.6 to 54.8 GB)",
+      "task_caveats": "Retains all experts. Tool calls in agent harnesses can be lost inside an unclosed <think> block (Strata #804) and silently dropped after an empty assistant turn (Strata #843)."
+    },
+    {
+      "ram": "96 GB or more",
+      "vram": ">= 12 GB",
+      "take": "IQ3_S, or Unsloth UD-IQ4_XS",
+      "works": "upstream recommends this size",
+      "caveat": "UD-IQ4_XS is 94 GB and reads from SSD during inference if RAM is constrained",
+      "why": "upstream recommends 96 GB or more for the largest quantizations (e.g. UD-IQ4_XS, 94 GB)",
+      "task_caveats": "Retains all experts. Best size for vision input — both NVIDIA and AMD paths are more responsive when host RAM is unconstrained."
+    }
+  ],
+  "pick_by_ram_note": "This is Strata's recommendation, not our own. It is a RAM-first table; the VRAM column is the documented low-RAM-mode exception, which changes what fits but makes it slower.",
+  "hardware_floor_from_strata": {
+    "gpu": "NVIDIA GeForce RTX 20/30/40/50 series, or AMD Radeon RX 7900 XT/XTX, 7800 XT, 7700 XT, 9060 XT, 9070/9070 XT, Radeon AI PRO R9700, or RX 6800/6900 series. Needs 12 GB VRAM or more.",
+    "gpu_practical": "**12 GB VRAM** is the stated floor",
+    "ram": "32 GB or more",
+    "ram_practical": "Upstream recommends 64 GB for typical configurations. This guide does not measure peak host process memory or guarantee OS headroom, load success, or paging-free operation.",
+    "disk": "Strata states about 80 GB free, but that figure does not cover the largest size - budget per quant from the table instead, and treat that as the sum of the listed files, not a peak-space guarantee for the whole install. Use an SSD: the first start is much faster and the SSD-offload path depends on it.",
+    "disk_practical": "SSD; the first start is much faster and the SSD-offload path depends on it",
+    "os": "Windows 10/11 or Linux with a current NVIDIA or AMD driver",
+    "os_practical": "two or three cards can share the model",
+    "multi_gpu": "Two or three cards can share the model"
+  },
+  "verification_sources": [
+    {
+      "name": "Official model card",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/raw/main/README.md",
+      "expected_token": "125B with 6B activated, plus 51B n-gram embedding and 4B MTP"
+    },
+    {
+      "name": "config.json (authoritative architecture)",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/raw/main/config.json",
+      "expected_token": "Qwen4ExpForConditionalGeneration"
+    },
+    {
+      "name": "safetensors index (authoritative BF16 size)",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/raw/main/model.safetensors.index.json",
+      "expected_token": "359999963128"
+    },
+    {
+      "name": "ISTA-DASLab quant file listing",
+      "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF/tree/main",
+      "expected_token": "IQ3_S"
+    },
+    {
+      "name": "Strata README",
+      "url": "https://raw.githubusercontent.com/Niko1221/Strata/main/README.md",
+      "expected_token": "24,576"
+    },
+    {
+      "name": "Strata docs/MODELS.md",
+      "url": "https://raw.githubusercontent.com/Niko1221/Strata/main/docs/MODELS.md",
+      "expected_token": "IQ2_XS"
+    },
+    {
+      "name": "ISTA-DASLab Coder quant file listing",
+      "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF/tree/main",
+      "expected_token": "IQ1_M"
+    }
+  ],
+  "pick_by_ram_preamble": "Answer these in order, then read the matching row: (1) Will you write in Chinese or other CJK text? If yes, exclude the Coder entirely. (2) Do you need image input? If yes, add the ~1 GB vision encoder file and check your OS/GPU combination in the failure-modes table. (3) Will you wire this into a coding agent that uses tool calls? Read the two Strata issues on tool-call loss first. (4) Match by RAM and VRAM. (5) Match by disk: per-quant budgets are in the table below. The `take` column is Strata's recommendation, not a result we measured; treat the sizes as documented and the `why` as arithmetic on shard sizes rather than tested fit."
+}

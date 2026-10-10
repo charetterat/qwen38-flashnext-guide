@@ -1,0 +1,173 @@
+{
+  "_comment": "Support matrix. Every row is backed by a specific search hit or a specific URL, not by inference. 'evidence' says exactly what was found. NOT_FOUND means we looked and found nothing - it does not mean the project refused support.",
+  "_methodology": {
+    "scanner": "GitHub code search API (GET /search/code) plus registry endpoints, all through the 19001 HK proxy",
+    "needle_control": "Before recording a 0, a needle query is run against the same repo to prove the repo is indexed and the scanner can hit it. A 0 from an unproved scanner is not evidence.",
+    "known_repo_name_corrections": [
+      "turboderp/exllamav3 → 404. The live repo is turboderp-org/exllamav3 (org renamed).",
+      "ggml-org/llamafile → 404. The live repo is mozilla-ai/llamafile."
+    ],
+    "caveat": "Code-search hit counts prove the identifier appears in the repo. They do not by themselves prove a released, working build. Where a release artifact is the only real proof, that is stated in the row.",
+    "claim_ceiling": "A code-search hit proves the identifier appears in that repository. It does NOT prove a released build, a working binary, or that the model runs. The ladder is: identifier found -> PR merged -> release shipped -> run verified by someone else. This file records the highest rung established by public evidence for each surveyed project.",
+    "support_scale": [
+      "1. identifier found in source (this is what a code hit means)",
+      "2. support PR merged upstream",
+      "3. a release artifact that actually contains it",
+      "4. a third party reported it running"
+    ],
+    "level_ladder_note": "evidence_level is the *highest* rung on the support ladder that this row's evidence reaches. finding_status is the search outcome (FOUND / NOT_FOUND / UNKNOWN). evidence_kind labels what kind of evidence established the rung. The two are independent: NOT_FOUND is not L0 and not L1 — there is no positive finding to place on the ladder. Negative and uncertain rows use evidence_level: null and evidence_kind: 'no_finding'.",
+    "finding_status_legend": {
+      "FOUND": "qualified model implementation or release artifact found within the declared survey scope",
+      "NOT_FOUND": "no model implementation found within the declared survey scope (irrelevant references or test-runner scripts excluded)",
+      "UNKNOWN": "could not be determined within the declared survey scope (e.g. wrapper app bundles an external engine)"
+    },
+    "evidence_kind_legend": {
+      "source_identifier": "code-search hit in the project's own repository (rung 1)",
+      "merged_pr": "merged support PR upstream (rung 2)",
+      "release_artifact": "a download tag or library page that contains the model (rung 3)",
+      "execution_report": "a third-party report of the model running (rung 4)",
+      "no_finding": "no positive evidence; do not assign a rung"
+    },
+    "summary_field": "Each row carries a hand-written `summary` for display. Do not truncate `evidence` with a sentence split — it cuts decimals and model names in half."
+  },
+  "runtimes": [
+    {
+      "name": "llama.cpp",
+      "repo": "ggml-org/llama.cpp",
+      "finding_status": "FOUND",
+      "evidence_kind": "merged_pr",
+      "evidence": "PR #27742 'model: add Qwen3.8-Flash-Next (qwen4exp)' was merged 2026-08-27T19:32:31Z (opened 2026-08-26, 30 commits). Implementation lives in src/models/qwen4exp.cpp.",
+      "evidence_url": "https://github.com/ggml-org/llama.cpp/pull/27742",
+      "expected_token": "qwen4exp",
+      "pr_quote": "Adds support for Qwen3.8-Flash-Next (HF model_type: qwen4_exp, Qwen4ExpForConditionalGeneration): converter, text graph, sparse attention, vision, and three quantizer fixes the model needs.",
+      "adds": [
+        "gated delta net (3 of every 4 layers)",
+        "MoE, 512 experts, top-10, gated shared expert",
+        "interleaved mrope, partial rotary 64/256",
+        "hyper-connections (hc_count = 4)",
+        "vision"
+      ],
+      "qualification": "The PR was opened as a draft because the weights were not public at the time, so its accuracy numbers were not reproducible from outside. That caveat is the PR author's own. We have not built or run the merged code ourselves; L2 says the PR is upstream, not that we have a working build.",
+      "evidence_level": 2,
+      "evidence_level_note": "PR #27742 merged 2026-08-27. The PR itself was opened as a draft because the weights were not yet public, so its accuracy claims were not reproducible from outside at the time.",
+      "summary": "PR #27742 merged 2026-08-27; implementation in `src/models/qwen4exp.cpp`"
+    },
+    {
+      "name": "ExLlamaV3",
+      "repo": "turboderp-org/exllamav3",
+      "finding_status": "FOUND",
+      "evidence_kind": "source_identifier",
+      "evidence": "4 code hits for qwen4_exp, including exllamav3/architecture/qwen4_exp.py, exllamav3/architecture/qwen4_exp_mtp.py and exllamav3/architecture/architectures.py. 31 hits for Qwen3.8 including util/convert_ngram.py and doc/convert.md.",
+      "evidence_url": "https://github.com/turboderp-org/exllamav3",
+      "expected_token": "qwen4_exp",
+      "note": "EXL3 for this model is real and has a dedicated n-gram conversion utility, which is the step that GGUF-based paths do not need.",
+      "evidence_level": 1,
+      "evidence_level_note": "",
+      "summary": "4 code hits: `exllamav3/architecture/qwen4_exp.py`, `qwen4_exp_mtp.py`, `architectures.py`, `qwen3_vl.py`"
+    },
+    {
+      "name": "vLLM",
+      "repo": "vllm-project/vllm",
+      "finding_status": "FOUND",
+      "evidence_kind": "source_identifier",
+      "evidence": "37 code hits for qwen4_exp, with separate AMD and NVIDIA backends: vllm/models/qwen4_exp/{amd,nvidia}/{model,qsa,mtp,ple_layer,low_latency_gemm,model_state}.py and a warmup at vllm/model_executor/warmup/qwen4_exp_qsa_warmup.py.",
+      "evidence_url": "https://github.com/vllm-project/vllm/tree/main/vllm/models/qwen4_exp",
+      "expected_token": "qwen4_exp",
+      "note": "Both AMD and NVIDIA kernels exist, which is unusual for a model this new.",
+      "evidence_level": 1,
+      "evidence_level_note": "",
+      "summary": "37 code hits, with separate AMD and NVIDIA backends under `vllm/models/qwen4_exp/`"
+    },
+    {
+      "name": "SGLang",
+      "repo": "sgl-project/sglang",
+      "finding_status": "FOUND",
+      "evidence_kind": "source_identifier",
+      "evidence": "25 code hits for qwen4_exp, including python/sglang/srt/models/qwen4_exp.py, python/sglang/srt/models/qwen4_exp_mtp.py and python/sglang/srt/configs/qwen4_exp.py.",
+      "evidence_url": "https://github.com/sgl-project/sglang",
+      "expected_token": "qwen4_exp",
+      "evidence_level": 1,
+      "evidence_level_note": "",
+      "summary": "25 code hits: `srt/models/qwen4_exp.py`, `qwen4_exp_mtp.py`, `srt/configs/qwen4_exp.py`"
+    },
+    {
+      "name": "Ollama",
+      "repo": "ollama/ollama",
+      "finding_status": "FOUND",
+      "evidence_kind": "release_artifact",
+      "evidence": "The Ollama library serves exactly one tag: qwen3.8-flash-next:125b-mlx, listed at 105 GB. Found via the ollama.com search endpoint, with a control query (qwen3 -> 11 library hits) proving the endpoint returns results.",
+      "evidence_url": "https://ollama.com/library/qwen3.8-flash-next",
+      "expected_token": "qwen3.8-flash-next:125b-mlx",
+      "note": "Only one tag, and it is the MLX build. There is no plain GGUF tag for this model, and the official qwen library (0.5b ... 110b) does not carry it. The ollama registry v2 API returns 404 for every library path tested, so tag size was read from the library page rather than the registry.",
+      "evidence_level": 3,
+      "evidence_level_note": "A library tag exists and is downloadable. Tag content is MLX-only, at 105 GB.",
+      "summary": "one library tag, `qwen3.8-flash-next:125b-mlx` at 105 GB"
+    },
+    {
+      "name": "MLX-LM",
+      "repo": "ml-explore/mlx-lm",
+      "finding_status": "NOT_FOUND",
+      "evidence_kind": "no_finding",
+      "evidence": "0 code hits for qwen4_exp or Qwen3.8 in ml-explore/mlx-lm. Control queries on the same repo returned 62 hits for 'def load' and 59 for 'mlx_lm', so the repo is indexed and the scanner works.",
+      "evidence_url": "https://github.com/ml-explore/mlx-lm",
+      "expected_token": "mlx_lm",
+      "note": "This does not contradict the Ollama MLX tag above: the Ollama build ships its own vendored runtime.",
+      "evidence_level": null,
+      "evidence_level_note": "no_finding — there is no positive evidence to place on the ladder",
+      "summary": "0 code hits for `qwen4_exp` or `Qwen3.8`"
+    },
+    {
+      "name": "llamafile",
+      "repo": "mozilla-ai/llamafile",
+      "finding_status": "NOT_FOUND",
+      "evidence_kind": "no_finding",
+      "evidence": "0 code hits for qwen4_exp in mozilla-ai/llamafile. Exactly 1 string match for Qwen3.8 in tests/run_integration_tests.sh (excluded from qualifying evidence as a test-runner script string rather than an engine implementation). Control queries confirmed repo indexing.",
+      "evidence_url": "https://github.com/mozilla-ai/llamafile",
+      "expected_token": "run_integration_tests",
+      "evidence_level": null,
+      "evidence_level_note": "no_finding — the single hit is a test-runner script string, not an implementation of the model architecture",
+      "summary": "0 code hits for `qwen4_exp`; 1 test script string match for `Qwen3.8` (excluded as non-implementation)"
+    },
+    {
+      "name": "LM Studio",
+      "repo": "lmstudio-ai/lms",
+      "finding_status": "UNKNOWN",
+      "evidence_kind": "no_finding",
+      "evidence": "0 code hits for qwen4_exp or Qwen3.8. Control query on the same repo returned 4 hits for llama.cpp, so the repo is indexed.",
+      "evidence_url": "https://github.com/lmstudio-ai/lms",
+      "expected_token": "llama.cpp",
+      "note": "The lms app repo has 0 hits because LM Studio bundles llama.cpp rather than implementing the model itself. A negative in that repo says nothing about whether the bundled engine supports it. We did not verify the bundled engine's build, so this row is UNKNOWN, not NOT_FOUND.",
+      "evidence_level": null,
+      "evidence_level_note": "no_finding — the model is not vendored in this repo; the bundled-engine build was not checked",
+      "summary": "0 code hits in the `lms` app repo, which does not vendor the model code"
+    }
+  ],
+  "practical_consequences": [
+    "vLLM and SGLang both carry dedicated qwen4_exp model packages; vLLM's has separate AMD and NVIDIA kernel paths. That is strong evidence of first-class intent, not proof of a shipped build.",
+    "ExLlamaV3 has dedicated qwen4_exp architecture files plus util/convert_ngram.py, which is the conversion step the GGUF path does not need.",
+    "For one consumer GPU with 12-24 GB, no runtime found in this survey fits the model without an offload strategy. Strata is the only project surveyed that ships one and publishes measurements.",
+    "The Ollama tag is MLX-only, which is Apple-silicon-shaped rather than a general Linux/Windows path."
+  ],
+  "verification_sources": [
+    {
+      "name": "llama.cpp merged support PR",
+      "url": "https://github.com/ggml-org/llama.cpp/pull/27742",
+      "expected_token": "qwen4exp"
+    },
+    {
+      "name": "ExLlamaV3 repo (correct org)",
+      "url": "https://github.com/turboderp-org/exllamav3",
+      "expected_token": "exllamav3"
+    },
+    {
+      "name": "vLLM qwen4_exp model package",
+      "url": "https://github.com/vllm-project/vllm/tree/main/vllm/models/qwen4_exp",
+      "expected_token": "qwen4_exp"
+    },
+    {
+      "name": "Ollama library page",
+      "url": "https://ollama.com/library/qwen3.8-flash-next",
+      "expected_token": "125b-mlx"
+    }
+  ]
+}

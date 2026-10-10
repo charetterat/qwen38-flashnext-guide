@@ -1,0 +1,205 @@
+{
+  "_comment": "Failure modes, each traced to a specific issue. 'symptom' is quoted or closely paraphrased from the reporter; 'fix' is what the reporter or a maintainer actually did, or explicitly 'no fix reported'. evidence_level: 1 = reporter observation, 2 = maintainer confirmed, 3 = fixed in a named released version. No item here is inferred.",
+  "_why_this_section_exists": "The model merged into llama.cpp on 2026-08-27. Every issue below is from a runtime that DOES support it. The failure modes are not about the model being unsupported; they are about the specific things that break. Anyone reading only the '180B on a 12GB card' headline will hit these.",
+  "failures": [
+    {
+      "id": "ngram-table-not-resident",
+      "severity": "high",
+      "title": "N-gram table reported as not resident on newer prebuilt binaries (cause unconfirmed)",
+      "repo": "ggml-org/llama.cpp",
+      "issue": 28355,
+      "url": "https://github.com/ggml-org/llama.cpp/issues/28355",
+      "state": "closed",
+      "symptom": "On builds newer than 10665 the reporter observed the model loading and generating correct output while prefill was extremely slow. Their hypothesis, explicitly unconfirmed, is that the ~51B-parameter N-gram embedding table (20M bigram+trigram entries near layer 2) is not resident, so per-token lookups hit host memory and mmap page faults instead of being prefetched.",
+      "environment": "Windows, dual RTX PRO 5000 with 160 GB DDR5, UD-Q4_K_XL GGUF, -c 262144",
+      "root_cause_status": "Reporter's hypothesis, explicitly unconfirmed. No maintainer statement found.",
+      "fix": "Closed. The reporter states the community prebuilt binary at build 10665 behaves correctly. No maintainer-confirmed root cause or fix version was found.",
+      "practical_advice": "If prefill is pathologically slow but output is correct, check build age before blaming the model or the quant.",
+      "evidence_level": "1 = reporter observation only",
+      "state_meaning": "closed on GitHub; a closed issue is not the same as a released fix - see fix for the version if one is named",
+      "output_observation": "The reporter did not report wrong answers. Nothing errored; prefill was the only thing affected. We are not claiming the outputs are correct in general - only that this report did not describe an output problem."
+    },
+    {
+      "id": "host-memory-growth",
+      "severity": "high",
+      "title": "Host RAM grows ~12 GiB/hour of normal chat until swap-thrash",
+      "repo": "ggml-org/llama.cpp",
+      "issue": 28933,
+      "url": "https://github.com/ggml-org/llama.cpp/issues/28933",
+      "state": "open",
+      "symptom": "On build b10909-mix-bea84f7 the llama-server process footprint grows continuously during ordinary multi-turn conversation, roughly +12 GiB per hour. On build b10830-mix-d5c17a0 it stays flat at ~2.1 GiB regardless of usage.",
+      "measurements": {
+        "build_a_stable": "VmRSS 2.1 GiB, VmSwap 0, flat across days",
+        "build_b_fresh": "VmRSS 19.2 GiB, VmSwap 9.6 GiB, RSS+Swap 28.8 GiB",
+        "build_b_after_1h": "VmRSS 26.1 GiB, VmSwap 14.7 GiB, RSS+Swap 40.8 GiB"
+      },
+      "environment": "NVIDIA DGX Spark (GB10, sm_121a, 128 GB unified memory, aarch64), Ubuntu 24.04, CUDA 13.0, driver 580.142, unslothai portable builds, IQ2_XXS/Q2_K imatrix GGUF (86.7 GB, checkpoint 0731), --ctx 32000, DSpark speculative decoding enabled",
+      "consequence": "With ~70 GiB committed to the GPU pool the kernel spilled 15 GiB to swap and the host swap-thrashed under concurrent load, twice, requiring a reboot.",
+      "fix": "No fix reported. Open at time of writing. The practical mitigation is the older build.",
+      "practical_advice": "On unified-memory systems (such as the reporter's DGX Spark setup), process memory growth can lead to swap-thrash under load. The reporter recommends pinning to the known-stable build (b10830-mix-d5c17a0).",
+      "fix_status": "no fix reported; open at time of writing",
+      "evidence_level": "1 = reporter measurement, not independently reproduced",
+      "state_meaning": "open at the time of writing",
+      "severity_note": "On the reporter's 128 GB unified-memory box this stopped being slow and became fatal - swap-thrash under load, twice, requiring a reboot. We are reporting that experience, not a general property of all such machines."
+    },
+    {
+      "id": "sm120-cuda132-wrong-output",
+      "severity": "high",
+      "title": "RTX 50-series (sm_120): reported wrong answers with CUDA 13.2 on IQ1_S / IQ2_S / IQ3_S",
+      "repo": "Niko1221/Strata",
+      "issue": 892,
+      "url": "https://github.com/Niko1221/Strata/issues/892",
+      "state": "open",
+      "symptom": "On Linux with CUDA 13.2 on an RTX 5070 Ti the engine loads and serves normally with no errors in the log, but every answer is wrong. 'What is 2+2?' returns '4+4=8.8.' Translating 'good morning' to German returns 'Good morning'. Most other prompts end after 1-2 tokens or loop.",
+      "environment": "RTX 5070 Ti 16 GB (sm_120), driver 580.178.04, Ubuntu 24.04, Core Ultra 7 265K (AVX2, no AVX-512), 62 GB RAM, Strata 6f32ec0 / engine 0.1.39",
+      "isolation_matrix": {
+        "strata_engine_cuda_13.2_any_settings": "garbage",
+        "llama_cpp_3cf0325_cuda_13.2_gpu_offload_same_gguf": "garbage, 0/12 on a small task suite",
+        "llama_cpp_same_build_cpu_only_ngl_0": "correct",
+        "llama_cpp_test_backend_ops_cuda_13.2": "MUL_MAT 44 FAIL, MUL_MAT_ID 22 FAIL, only iq1_s, iq2_s, iq3_s affected (ERR 0.4-0.66)"
+      },
+      "diagnosis": "What the reporter established: the same build is correct with -ngl 0 (CPU only) and wrong with GPU offload, and test-backend-ops shows MUL_MAT 44 FAIL / MUL_MAT_ID 22 FAIL confined to iq1_s, iq2_s, iq3_s under CUDA 13.2. That localises the fault to the GPU path for those quant types. It does not establish the mechanism - a compiler bug, a kernel implementation bug and a driver interaction all remain consistent with the evidence, and no maintainer has ruled any of them out.",
+      "fix": "No fix reported. The reporter states CUDA 13.0 works on the same card.",
+      "practical_advice": "If answers are wrong rather than missing, and you are on an RTX 50-series card, check your nvcc version before anything else. This fails silently.",
+      "fix_status": "reporter-tested workaround, not a maintainer-confirmed fix",
+      "evidence_level": "1 = reporter reproduction with an isolation matrix",
+      "state_meaning": "open at the time of writing"
+    },
+    {
+      "id": "cjk-broken-on-coder",
+      "severity": "medium",
+      "title": "Coder variant answers wrong or loops on Chinese and other CJK text",
+      "repo": "Niko1221/Strata",
+      "issue": 438,
+      "url": "https://github.com/Niko1221/Strata/issues/438",
+      "state": "reference in docs/MODELS.md",
+      "symptom": "With half the experts removed, Chinese answers came out wrong or looping where English was fine.",
+      "mechanism": "The Coder keeps 256 of each layer's 512 experts, chosen on code data. The drop is not language-neutral.",
+      "fix": "Use Q2_0, IQ2_XS or IQ3_S, which keep every expert, whenever you need CJK text.",
+      "practical_advice": "Do not pick the Coder for Chinese work even though it is the only published variant targeting 32 GB RAM setups.",
+      "state_meaning": "not a GitHub state; this is a documentation reference",
+      "evidence_level": "2 = documented by the project in docs/MODELS.md, issue #438"
+    },
+    {
+      "id": "vision-cpu-token-cap",
+      "severity": "medium",
+      "title": "CPU vision path caps images at 300 tokens; llama.cpp's mtmd asks for >=1024",
+      "repo": "Niko1221/Strata",
+      "issue": 767,
+      "url": "https://github.com/Niko1221/Strata/issues/767",
+      "state": "closed",
+      "symptom": "Strata's --vision cpu path caps images at 300 tokens while llama.cpp's Qwen-VL multimodal path requests at least 1024.",
+      "fix": "Closed in Strata. Relevant if you are comparing the two paths on image input.",
+      "state_meaning": "closed on GitHub; a closed issue is not the same as a released fix - see fix for the version if one is named",
+      "evidence_level": "1 = reporter observation, closed without a named version"
+    },
+    {
+      "id": "amd-vision-unavailable",
+      "severity": "medium",
+      "title": "Vision input on AMD: works on Linux through the CPU, unavailable on Windows",
+      "repo": "Niko1221/Strata",
+      "issue": 304,
+      "url": "https://github.com/Niko1221/Strata/issues/304",
+      "state": "closed",
+      "symptom": "Strata's README states AMD cards read pictures on Linux through the processor; on Windows they cannot yet.",
+      "fix": "No fix reported. Use text only, or an NVIDIA card for image input on Windows.",
+      "state_meaning": "closed on GitHub; the limitation is documented in Strata's README, which is the durable form",
+      "evidence_level": "2 = documented by the project in its README"
+    },
+    {
+      "id": "tool-call-in-think",
+      "severity": "medium",
+      "title": "Tool call written inside <think> without </think> is returned as reasoning_content",
+      "repo": "Niko1221/Strata",
+      "issue": 804,
+      "url": "https://github.com/Niko1221/Strata/issues/804",
+      "state": "closed",
+      "symptom": "A tool call emitted inside the think block without a closing tag is surfaced as reasoning_content rather than as a tool call, so agent harnesses lose it.",
+      "practical_advice": "Relevant if you are wiring this into a coding agent and tools appear to be ignored.",
+      "state_meaning": "closed on GitHub; a closed issue is not the same as a released fix - see fix for the version if one is named",
+      "evidence_level": "1 = reporter observation, closed without a named version"
+    },
+    {
+      "id": "tool-calls-dropped-after-empty-turn",
+      "severity": "medium",
+      "title": "Tool calls silently dropped in agent sessions after an empty assistant turn",
+      "repo": "Niko1221/Strata",
+      "issue": 843,
+      "url": "https://github.com/Niko1221/Strata/issues/843",
+      "state": "closed",
+      "symptom": "In agent sessions, an empty assistant turn causes subsequent tool calls to be silently dropped.",
+      "fix": "Closed with a fix in Strata.",
+      "state_meaning": "closed on GitHub; a closed issue is not the same as a released fix - see fix for the version if one is named",
+      "evidence_level": "1 = reporter observation, closed with a fix but no version named here"
+    },
+    {
+      "id": "thinking-loops",
+      "severity": "low",
+      "title": "Frequent thinking loops",
+      "repo": "Niko1221/Strata",
+      "issue": 75,
+      "url": "https://github.com/Niko1221/Strata/issues/75",
+      "state": "closed",
+      "symptom": "The model loops in the thinking phase. 13 comments, the most-discussed issue in this set.",
+      "note": "The Swift 1.5 fine-tune exists specifically to shorten thinking, which is the project's own answer to this.",
+      "state_meaning": "closed on GitHub; a closed issue is not the same as a released fix - see fix for the version if one is named",
+      "evidence_level": "1 = reporter observation, closed"
+    },
+    {
+      "id": "context-limit-conservative",
+      "severity": "low",
+      "title": "128K hard limit on 64 GB RAM is too conservative",
+      "repo": "Niko1221/Strata",
+      "issue": 406,
+      "url": "https://github.com/Niko1221/Strata/issues/406",
+      "state": "closed",
+      "symptom": "The installer's 128K cap at 64 GB RAM leaves headroom unused.",
+      "note": "The model itself supports 262,144 natively. This is an installer policy, not a model limit.",
+      "state_meaning": "closed on GitHub; a closed issue is not the same as a released fix - see fix for the version if one is named",
+      "evidence_level": "2 = documented by the project in docs/MODELS.md"
+    }
+  ],
+  "verification_sources": [
+    {
+      "name": "llama.cpp issue 28355 (n-gram table)",
+      "url": "https://github.com/ggml-org/llama.cpp/issues/28355",
+      "expected_token": "N-gram embedding table"
+    },
+    {
+      "name": "llama.cpp issue 28933 (memory growth)",
+      "url": "https://github.com/ggml-org/llama.cpp/issues/28933",
+      "expected_token": "qwen4_exp"
+    },
+    {
+      "name": "Strata issue 892 (wrong answers on GPU, CUDA 13.2)",
+      "url": "https://github.com/Niko1221/Strata/issues/892",
+      "expected_token": "sm_120"
+    },
+    {
+      "name": "Strata issue 804 (tool call in think)",
+      "url": "https://github.com/Niko1221/Strata/issues/804",
+      "expected_token": "reasoning_content"
+    },
+    {
+      "name": "Strata issue 304 (AMD vision)",
+      "url": "https://github.com/Niko1221/Strata/issues/304",
+      "expected_token": "Vision"
+    },
+    {
+      "name": "Strata issue 438 (Coder on CJK text)",
+      "url": "https://github.com/Niko1221/Strata/issues/438",
+      "expected_token": "Chinese"
+    },
+    {
+      "name": "Strata issue 767 (CPU vision token cap)",
+      "url": "https://github.com/Niko1221/Strata/issues/767",
+      "expected_token": "mtmd"
+    },
+    {
+      "name": "Strata issue 843 (tool calls dropped)",
+      "url": "https://github.com/Niko1221/Strata/issues/843",
+      "expected_token": "empty assistant turn"
+    }
+  ],
+  "measured_throughput_caveat": "System A rows are not all from the same engine build: Q2_0 was measured on engine 0.1.36, the rest on 0.1.26. So the spread across quant rows is a mix of quantization effect and engine-version effect and should not be read as a clean quantization comparison."
+}
