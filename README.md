@@ -14,7 +14,7 @@ these numbers are ours.**
 > ⛔ **The throughput numbers below are not ours.** They are one project's measurements on
 > two specific machines. We have not re-run them.
 >
-> 📅 **Sources last checked: 2026-10-19.** Only the citations listed under
+> 📅 **Sources last checked: 2026-10-24.** Only the citations listed under
 > `data/*/verification_sources` are checked. Each check is a reachability + keyword-presence
 > test — it proves the page still contains the string that made it worth citing. It does **not**
 > prove the conclusion drawn from it is still correct, and it does not cover citations used
