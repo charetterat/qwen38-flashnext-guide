@@ -174,7 +174,6 @@ tested fit. Read the "task caveats" column *before* matching by RAM.
 
 ---
 
-
 ## Quantizations, with real file sizes
 
 These are the actual byte counts of the published files, not estimates. The
